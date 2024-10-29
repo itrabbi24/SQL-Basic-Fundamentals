@@ -1991,6 +1991,285 @@ With move 'database_name' to 'new_database_name.mdf',
 move 'database_name_log' to 'new_database_name_log.ldf'
 
 
+-- Link Server Configuration
+EXEC sp_addlinkedserver 
+    @server='server_name', 
+    @srvproduct='', 
+    @provider='SQLNCLI', 
+    @datasrc='data_source';
+
+-- Link Server Login Mapping
+EXEC sp_addlinkedsrvlogin 
+    @rmtsrvname='server_name',
+    @useself='False',
+    @locallogin=NULL,
+    @rmtuser='remote_user',
+    @rmtpassword='remote_password';
+
+-- Query Data from Linked Server
+SELECT * 
+FROM server_name.database_name.schema_name.table_name;
+
+-- Remove Linked Server
+EXEC sp_dropserver 
+    @server='server_name', 
+    @droplogins='droplogins';
+
+
+
+-- RPC Server Configuration
+EXEC sp_addrpcserver 
+    @server='server_name', 
+    @srvproduct='', 
+    @provider='SQLNCLI', 
+    @datasrc='data_source';
+
+-- Remove RPC Server
+EXEC sp_droprpcserver 
+    @server='server_name';
+
+
+-- Remort Link SQL Server Configuration
+EXEC sp_addremotelogin 
+    @loginame='login_name',
+    @srvname='server_name',
+    @useself='False',
+    @locallogin=NULL,
+    @rmtuser='remote_user',
+    @rmtpassword='remote_password';
+
+
+-- Remort Link SQL Server Login Mapping
+EXEC sp_addremotelogin 
+    @loginame='login_name',
+    @useself='False',
+    @locallogin=NULL,
+    @rmtuser='remote_user',
+    @rmtpassword='remote_password';
+
+-- Query Data from Remort Link SQL Server
+SELECT * 
+FROM server_name.database_name.schema_name.table_name;
+
+-- Remove Remort Link SQL Server
+EXEC sp_dropremotelogin 
+    @loginame='login_name'; 
+
+-- SQL Rapplication Server Configuration
+EXEC sp_addapprole 
+    @rolename='app_role_name',
+    @description='app_role_description';
+
+-- Remove SQL Rapplication Server
+EXEC sp_dropapprole 
+    @rolename='app_role_name';
+
+
+
+-- Locking
+SELECT *
+FROM table_name
+WHERE column_name1 = value1
+AND column_name2 = value2
+WITH (TABLOCKX)
+
+-- Locking and Deadlock
+SELECT *
+FROM table_name
+WHERE column_name1 = value1
+AND column_name2 = value2
+WITH (TABLOCKX, HOLDLOCK)
+
+-- solve deadlock
+SELECT *
+FROM table_name
+WHERE column_name1 = value1
+AND column_name2 = value2
+WITH (TABLOCKX, HOLDLOCK, UPDLOCK)
+
+
+-- service broker
+
+-- Create a queue
+CREATE QUEUE queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service
+CREATE SERVICE service_name
+AS QUEUE queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker
+CREATE SERVICE BROKER service_broker_name
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker queue
+CREATE QUEUE service_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service
+CREATE SERVICE service_broker_service_name
+AS QUEUE service_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker
+CREATE SERVICE BROKER service_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker queue
+CREATE QUEUE service_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service
+CREATE SERVICE service_broker_broker_service_name
+AS QUEUE service_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service
+CREATE SERVICE service_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service 
+CREATE SERVICE service_broker_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service 
+CREATE SERVICE service_broker_broker_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);   
+
+-- Create a service broker service broker service broker service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service 
+CREATE SERVICE service_broker_broker_broker_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_broker_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);   
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_broker_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service 
+CREATE SERVICE service_broker_broker_broker_broker_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_broker_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_broker_broker_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service 
+CREATE SERVICE service_broker_broker_broker_broker_broker_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_broker_broker_broker_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);  
+
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service 
+CREATE SERVICE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);   
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service 
+CREATE SERVICE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service 
+CREATE SERVICE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker
+CREATE SERVICE BROKER service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_name
+WITH (MAX_QUEUE_READERS = 1);   
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker queue
+CREATE QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+AS QUEUE WITH (MAX_QUEUE_READERS = 1);
+
+
+-- Create a service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service broker service 
+CREATE SERVICE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_service_name
+AS QUEUE service_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_broker_queue_name
+FOR READ
+WITH (MAX_QUEUE_READERS = 1);
+
 
 
 
