@@ -1974,6 +1974,25 @@ Where column_name1 = value1
 And column_name2 = value2
 
 
+-- SQL database backup and recovery
+
+-- 1. SQL database backup
+Backup database database_name
+To disk = 'backup_file_name.bak'
+
+-- 2. SQL database recovery
+Restore database database_name
+From disk = 'backup_file_name.bak'
+
+-- 3. SQL database restore
+Restore database database_name
+From disk = 'backup_file_name.bak'
+With move 'database_name' to 'new_database_name.mdf',
+move 'database_name_log' to 'new_database_name_log.ldf'
+
+
+
+
 
 -- Expert-Level SQL Concepts
 -- -- Dynamic SQL
