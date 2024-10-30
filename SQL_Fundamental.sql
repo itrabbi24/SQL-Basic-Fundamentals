@@ -2307,3 +2307,674 @@ WITH (MAX_QUEUE_READERS = 1);
 -- Query Tuning and Index Optimization
 -- Caching Strategies
 -- Optimizing SQL Code for High Concurrency
+
+
+
+-- Cursors 
+
+-- SQL cursors are database objects used to retrieve, manipulate, and navigate through a result set one row at a time. 
+-- They are particularly useful when you need to process individual rows returned by a query, especially in procedural 
+-- programming contexts where you want to perform operations on each row sequentially.
+
+
+-- Key Concepts of SQL Cursors:
+
+-- 1. Declaration: A cursor must be declared before it can be used. This involves defining the SQL query that will be executed to populate the cursor.
+
+    DECLARE cursor_name CURSOR FOR
+    SELECT column1, column2 FROM table_name WHERE condition;
+
+-- 2. Initialization: The cursor must be initialized before it can be used. This involves executing the SQL query that defines the cursor.
+
+    OPEN cursor_name;
+
+-- 3. Fetching: The cursor can be used to fetch the next row of data from the result set. This involves using the FETCH statement to move the cursor to the next row.
+
+    FETCH cursor_name INTO variable1, variable2;
+
+-- 4. Closing: The cursor must be closed when it is no longer needed. This involves using the CLOSE statement to close the cursor.
+
+    CLOSE cursor_name;
+
+-- 5. Dealing with Errors: If an error occurs during the execution of a cursor, you can use the TRY/CATCH statement to handle the error and continue processing the query.
+
+-- Assume we have a table named Employees
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    Name NVARCHAR(100),
+    Salary DECIMAL(10, 2)
+);
+
+-- Insert some sample data
+INSERT INTO Employees (EmployeeID, Name, Salary) VALUES (1, 'Alice', 50000);
+INSERT INTO Employees (EmployeeID, Name, Salary) VALUES (2, 'Bob', 60000);
+INSERT INTO Employees (EmployeeID, Name, Salary) VALUES (3, 'Charlie', 70000);
+
+-- Declare variables
+DECLARE @EmployeeID INT;
+DECLARE @NewSalary DECIMAL(10, 2);
+DECLARE @ErrorMessage NVARCHAR(4000);
+
+-- Declare the cursor
+DECLARE employee_cursor CURSOR FOR
+SELECT EmployeeID FROM Employees;
+
+-- Open the cursor
+OPEN employee_cursor;
+
+-- Begin the TRY block
+BEGIN TRY
+    -- Fetch the first row
+    FETCH NEXT FROM employee_cursor INTO @EmployeeID;
+
+    -- Loop through the cursor
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        -- Simulate a new salary (for example, increase by 10%)
+        SET @NewSalary = (SELECT Salary * 1.10 FROM Employees WHERE EmployeeID = @EmployeeID);
+
+        -- Update the salary (this could potentially fail)
+        UPDATE Employees
+        SET Salary = @NewSalary
+        WHERE EmployeeID = @EmployeeID;
+
+        -- Fetch the next row
+        FETCH NEXT FROM employee_cursor INTO @EmployeeID;
+    END
+END TRY
+BEGIN CATCH
+    -- Capture the error message
+    SET @ErrorMessage = ERROR_MESSAGE();
+    PRINT 'Error occurred: ' + @ErrorMessage;
+END CATCH
+
+-- Close the cursor
+CLOSE employee_cursor;
+DEALLOCATE employee_cursor;
+
+-- Select the updated salaries
+SELECT * FROM Employees;
+
+-- 6. Caching: Caching is used to improve performance by storing the result set in memory. This can be done by using the CACHE statement in conjunction with the FETCH statement.
+
+-- Assume we have a table named Employees
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    Name NVARCHAR(100),
+    Salary DECIMAL(10, 2)
+);
+
+-- Insert some sample data
+INSERT INTO Employees (EmployeeID, Name, Salary) VALUES (1, 'Alice', 50000);
+INSERT INTO Employees (EmployeeID, Name, Salary) VALUES (2, 'Bob', 60000);
+INSERT INTO Employees (EmployeeID, Name, Salary) VALUES (3, 'Charlie', 70000);
+
+-- Declare variables
+DECLARE @EmployeeID INT;
+DECLARE @NewSalary DECIMAL(10, 2);
+DECLARE @ErrorMessage NVARCHAR(4000);
+
+-- Declare a static cursor for better performance
+DECLARE employee_cursor CURSOR STATIC FOR
+SELECT EmployeeID FROM Employees;
+
+-- Open the cursor
+OPEN employee_cursor;
+
+BEGIN TRY
+    -- Fetch the first row
+    FETCH NEXT FROM employee_cursor INTO @EmployeeID;
+
+    -- Loop through the cursor
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        -- Simulate a new salary (increase by 10%)
+        SET @NewSalary = (SELECT Salary * 1.10 FROM Employees WHERE EmployeeID = @EmployeeID);
+
+        -- Update the salary
+        UPDATE Employees
+        SET Salary = @NewSalary
+        WHERE EmployeeID = @EmployeeID;
+
+        -- Fetch the next row
+        FETCH NEXT FROM employee_cursor INTO @EmployeeID;
+    END
+END TRY
+BEGIN CATCH
+    -- Capture and print the error message
+    SET @ErrorMessage = ERROR_MESSAGE();
+    PRINT 'Error occurred: ' + @ErrorMessage;
+END CATCH
+
+-- Close and deallocate the cursor
+CLOSE employee_cursor;
+DEALLOCATE employee_cursor;
+
+-- Select the updated salaries
+SELECT * FROM Employees;
+
+
+-- 7. Nested Cursors: A cursor can be used inside another cursor to retrieve data from a nested result set.
+
+-- Create Departments table
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY,
+    DepartmentName NVARCHAR(100)
+);
+
+-- Create Employees table
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    Name NVARCHAR(100),
+    DepartmentID INT,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+-- Insert sample data
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (1, 'HR');
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (2, 'IT');
+
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (1, 'Alice', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (2, 'Bob', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (3, 'Charlie', 2);
+
+-- Declare variables
+DECLARE @DepartmentID INT;
+DECLARE @DepartmentName NVARCHAR(100);
+DECLARE @EmployeeID INT;
+DECLARE @EmployeeName NVARCHAR(100);
+
+-- Declare outer cursor for Departments
+DECLARE dept_cursor CURSOR FOR
+SELECT DepartmentID, DepartmentName FROM Departments;
+
+-- Open the outer cursor
+OPEN dept_cursor;
+
+-- Fetch the first department
+FETCH NEXT FROM dept_cursor INTO @DepartmentID, @DepartmentName;
+
+-- Loop through the outer cursor
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    PRINT 'Department: ' + @DepartmentName;
+
+    -- Declare inner cursor for Employees in the current department
+    DECLARE emp_cursor CURSOR FOR
+    SELECT EmployeeID, Name FROM Employees WHERE DepartmentID = @DepartmentID;
+
+    -- Open the inner cursor
+    OPEN emp_cursor;
+
+    -- Fetch the first employee
+    FETCH NEXT FROM emp_cursor INTO @EmployeeID, @EmployeeName;
+
+    -- Loop through the inner cursor
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        PRINT '  Employee: ' + @EmployeeName;  -- Print employee name
+        FETCH NEXT FROM emp_cursor INTO @EmployeeID, @EmployeeName;
+    END
+
+    -- Close and deallocate the inner cursor
+    CLOSE emp_cursor;
+    DEALLOCATE emp_cursor;
+
+    -- Fetch the next department
+    FETCH NEXT FROM dept_cursor INTO @DepartmentID, @DepartmentName;
+END
+
+-- Close and deallocate the outer cursor
+CLOSE dept_cursor;
+DEALLOCATE dept_cursor;
+
+
+-- 8. Nested Queries: A cursor can be used inside a query to retrieve data from a nested result set.
+
+-- Create Departments table
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY,
+    DepartmentName NVARCHAR(100)
+);
+
+-- Create Employees table
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    Name NVARCHAR(100),
+    DepartmentID INT,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+-- Insert sample data
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (1, 'HR');
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (2, 'IT');
+
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (1, 'Alice', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (2, 'Bob', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (3, 'Charlie', 2);
+
+-- Declare variables
+DECLARE @DepartmentID INT;
+DECLARE @DepartmentName NVARCHAR(100);
+
+-- Declare a cursor for Departments
+DECLARE dept_cursor CURSOR FOR
+SELECT DepartmentID, DepartmentName FROM Departments;
+
+-- Open the cursor
+OPEN dept_cursor;
+
+-- Fetch the first department
+FETCH NEXT FROM dept_cursor INTO @DepartmentID, @DepartmentName;
+
+-- Loop through the cursor
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    PRINT 'Department: ' + @DepartmentName;
+
+    -- Use a nested query to retrieve employees in the current department
+    DECLARE @EmployeeList NVARCHAR(MAX);
+    
+    SELECT @EmployeeList = STRING_AGG(Name, ', ')
+    FROM Employees
+    WHERE DepartmentID = @DepartmentID;
+
+    -- Print the employees belonging to the current department
+    PRINT '  Employees: ' + ISNULL(@EmployeeList, 'No Employees');
+
+    -- Fetch the next department
+    FETCH NEXT FROM dept_cursor INTO @DepartmentID, @DepartmentName;
+END
+
+-- Close and deallocate the cursor
+CLOSE dept_cursor;
+DEALLOCATE dept_cursor;
+
+
+
+-- 9. Subqueries: A cursor can be used in a subquery to retrieve data from a nested result set.
+
+-- Create Departments table
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY,
+    DepartmentName NVARCHAR(100)
+);
+
+-- Create Employees table
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    Name NVARCHAR(100),
+    DepartmentID INT,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+-- Insert sample data
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (1, 'HR');
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (2, 'IT');
+
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (1, 'Alice', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (2, 'Bob', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (3, 'Charlie', 2);
+
+-- Declare variables
+DECLARE @DepartmentID INT;
+DECLARE @DepartmentName NVARCHAR(100);
+DECLARE @EmployeeCount INT;
+
+-- Declare a cursor for Departments
+DECLARE dept_cursor CURSOR FOR
+SELECT DepartmentID, DepartmentName FROM Departments;
+
+-- Open the cursor
+OPEN dept_cursor;
+
+-- Fetch the first department
+FETCH NEXT FROM dept_cursor INTO @DepartmentID, @DepartmentName;
+
+-- Loop through the cursor
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    -- Use a subquery to get the count of employees in the current department
+    SELECT @EmployeeCount = COUNT(*)
+    FROM Employees
+    WHERE DepartmentID = @DepartmentID;
+
+    -- Print department details and employee count
+    PRINT 'Department: ' + @DepartmentName + ', Employee Count: ' + CAST(@EmployeeCount AS NVARCHAR(10));
+
+    -- Fetch the next department
+    FETCH NEXT FROM dept_cursor INTO @DepartmentID, @DepartmentName;
+END
+
+-- Close and deallocate the cursor
+CLOSE dept_cursor;
+DEALLOCATE dept_cursor;
+
+
+
+-- 10. Recursive Queries: A cursor can be used in a recursive query to retrieve data from a nested result set.
+
+-- Create a table of employee hierarchy
+CREATE TABLE EmployeeHierarchy (
+    EmployeeID INT,
+    ManagerID INT
+);
+
+-- Insert some sample data
+INSERT INTO EmployeeHierarchy (EmployeeID, ManagerID) VALUES (1, 2);
+INSERT INTO EmployeeHierarchy (EmployeeID, ManagerID) VALUES (2, 3);
+INSERT INTO EmployeeHierarchy (EmployeeID, ManagerID) VALUES (3, 4);
+INSERT INTO EmployeeHierarchy (EmployeeID, ManagerID) VALUES (4, 5);
+INSERT INTO EmployeeHierarchy (EmployeeID, ManagerID) VALUES (5, 6);
+
+-- Declare a cursor to traverse the hierarchy
+DECLARE employee_hierarchy_cursor CURSOR FOR
+SELECT EmployeeID, ManagerID 
+FROM EmployeeHierarchy;
+
+-- Open the cursor
+OPEN employee_hierarchy_cursor;
+
+-- Fetch the first employee
+FETCH NEXT FROM employee_hierarchy_cursor INTO @EmployeeID, @ManagerID;
+
+-- Loop through the hierarchy
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    -- Print the employee and manager
+    PRINT 'Employee: ' + CAST(@EmployeeID AS NVARCHAR(10)) + ', Manager: ' + CAST(@ManagerID AS NVARCHAR(10));
+
+    -- Fetch the next employee
+    FETCH NEXT FROM employee_hierarchy_cursor INTO @EmployeeID, @ManagerID;
+END
+
+-- Close and deallocate the cursor
+CLOSE employee_hierarchy_cursor;
+DEALLOCATE employee_hierarchy_cursor;
+
+-- 11. Correlated Queries: A cursor can be used in a correlated query to retrieve data from a nested result set.
+
+-- Create Departments table
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY,
+    DepartmentName NVARCHAR(100)
+);
+
+-- Create Employees table
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    Name NVARCHAR(100),
+    DepartmentID INT,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+-- Insert sample data
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (1, 'HR');
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (2, 'IT');
+
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (1, 'Alice', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (2, 'Bob', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (3, 'Charlie', 2);
+
+-- Declare variables
+DECLARE @DepartmentID INT;
+DECLARE @DepartmentName NVARCHAR(100);
+DECLARE @EmployeeName NVARCHAR(100);
+
+-- Declare a cursor for Departments
+DECLARE dept_cursor CURSOR FOR
+SELECT DepartmentID, DepartmentName FROM Departments;
+
+-- Open the cursor
+OPEN dept_cursor;
+
+-- Fetch the first department
+FETCH NEXT FROM dept_cursor INTO @DepartmentID, @DepartmentName;
+
+-- Loop through the cursor
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    PRINT 'Department: ' + @DepartmentName;
+
+    -- Use a correlated subquery to retrieve employees in the current department
+    DECLARE employee_cursor CURSOR FOR
+    SELECT Name 
+    FROM Employees AS e 
+    WHERE e.DepartmentID = @DepartmentID;
+
+    -- Open the inner cursor
+    OPEN employee_cursor;
+
+    -- Fetch the first employee
+    FETCH NEXT FROM employee_cursor INTO @EmployeeName;
+
+    -- Loop through the inner cursor
+    WHILE @@FETCH_STATUS = 0
+    BEGIN
+        PRINT '  Employee: ' + @EmployeeName;  -- Print employee name
+        FETCH NEXT FROM employee_cursor INTO @EmployeeName;
+    END
+
+    -- Close and deallocate the inner cursor
+    CLOSE employee_cursor;
+    DEALLOCATE employee_cursor;
+
+    -- Fetch the next department
+    FETCH NEXT FROM dept_cursor INTO @DepartmentID, @DepartmentName;
+END
+
+-- Close and deallocate the outer cursor
+CLOSE dept_cursor;
+DEALLOCATE dept_cursor;
+
+-- 12. Cursor Variables: A cursor can be used to store and retrieve data from a nested result set.
+
+-- Create Departments table
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY,
+    DepartmentName NVARCHAR(100)
+);
+
+-- Create Employees table
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    Name NVARCHAR(100),
+    DepartmentID INT,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+-- Insert sample data
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (1, 'HR');
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (2, 'IT');
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (1, 'Alice', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (2, 'Bob', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (3, 'Charlie', 2);
+
+-- Declare a cursor variable
+DECLARE @dept_cursor CURSOR;
+
+-- Set the cursor variable to select departments
+SET @dept_cursor = CURSOR FOR
+SELECT DepartmentID, DepartmentName FROM Departments;
+
+-- Open the cursor
+OPEN @dept_cursor;
+
+-- Declare variables to hold the values
+DECLARE @DepartmentID INT;
+DECLARE @DepartmentName NVARCHAR(100);
+
+-- Fetch data
+FETCH NEXT FROM @dept_cursor INTO @DepartmentID, @DepartmentName;
+
+-- Loop through the cursor
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    PRINT 'Department: ' + @DepartmentName;
+    FETCH NEXT FROM @dept_cursor INTO @DepartmentID, @DepartmentName;
+END
+
+-- Close and deallocate the cursor
+CLOSE @dept_cursor;
+DEALLOCATE @dept_cursor;
+
+-- 13. Cursor Attributes: A cursor can be used to retrieve attributes from a nested result set.
+
+-- Declare a cursor
+DECLARE @dept_cursor CURSOR;
+
+-- Set the cursor to select departments
+SET @dept_cursor = CURSOR FOR
+SELECT DepartmentID, DepartmentName FROM Departments;
+
+-- Open the cursor
+OPEN @dept_cursor;
+
+-- Check cursor attributes
+PRINT 'Cursor Status: ' + CAST(@@CURSOR_ROWS AS NVARCHAR(10)); -- Number of rows in the cursor
+
+-- Close and deallocate the cursor
+CLOSE @dept_cursor;
+DEALLOCATE @dept_cursor;
+
+-- 14. Cursor Properties: A cursor can be used to retrieve properties from a nested result set.
+
+-- Declare a cursor
+DECLARE @dept_cursor CURSOR;
+
+-- Set the cursor to select departments
+SET @dept_cursor = CURSOR LOCAL FAST_FORWARD FOR
+SELECT DepartmentID, DepartmentName FROM Departments;
+
+-- Open the cursor
+OPEN @dept_cursor;
+
+-- Print cursor properties
+PRINT 'Cursor Type: ' + CAST(CURSOR_STATUS('global') AS NVARCHAR(10)); -- Check if cursor is global or local
+
+-- Close and deallocate the cursor
+CLOSE @dept_cursor;
+DEALLOCATE @dept_cursor;
+
+-- 15. Cursor Functions: A cursor can be used to perform operations on a nested result set.
+
+-- Declare a cursor
+DECLARE @dept_cursor CURSOR;
+
+-- Set the cursor to select departments
+SET @dept_cursor = CURSOR FOR
+SELECT DepartmentID, DepartmentName FROM Departments;
+
+-- Open the cursor
+OPEN @dept_cursor;
+
+-- Declare variables to hold the values
+DECLARE @DepartmentID INT;
+DECLARE @DepartmentName NVARCHAR(100);
+
+-- Fetch data
+FETCH NEXT FROM @dept_cursor INTO @DepartmentID, @DepartmentName;
+
+-- Loop through the cursor
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    PRINT 'Department: ' + @DepartmentName + ' (ID: ' + CAST(@DepartmentID AS NVARCHAR(10)) + ')';
+    FETCH NEXT FROM @dept_cursor INTO @DepartmentID, @DepartmentName;
+END
+
+-- Close and deallocate the cursor
+CLOSE @dept_cursor;
+DEALLOCATE @dept_cursor;
+
+-- 16. Cursor Parameters: A cursor can be used to pass parameters to a nested result set.
+
+-- Create Departments table
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY,
+    DepartmentName NVARCHAR(100)
+);
+
+-- Create Employees table
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    Name NVARCHAR(100),
+    DepartmentID INT,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+-- Insert sample data
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (1, 'HR');
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (2, 'IT');
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (1, 'Alice', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (2, 'Bob', 1);
+INSERT INTO Employees (EmployeeID, Name, DepartmentID) VALUES (3, 'Charlie', 2);
+
+-- Declare a cursor
+DECLARE @employee_cursor CURSOR;
+
+-- Declare a parameter for department ID
+DECLARE @DeptID INT = 1; -- Example parameter to filter by department
+
+-- Set the cursor to select employees based on the parameter
+SET @employee_cursor = CURSOR FOR
+SELECT Name FROM Employees WHERE DepartmentID = @DeptID;
+
+-- Open the cursor
+OPEN @employee_cursor;
+
+-- Declare a variable to hold the employee name
+DECLARE @EmployeeName NVARCHAR(100);
+
+-- Fetch data
+FETCH NEXT FROM @employee_cursor INTO @EmployeeName;
+
+-- Loop through the cursor
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    PRINT 'Employee: ' + @EmployeeName; -- Print employee name
+    FETCH NEXT FROM @employee_cursor INTO @EmployeeName;
+END
+
+-- Close and deallocate the cursor
+CLOSE @employee_cursor;
+DEALLOCATE @employee_cursor;
+
+-- 17. Cursor Variables: A cursor can be used to store and retrieve data from a nested result set.
+
+-- Create Departments table
+CREATE TABLE Departments (
+    DepartmentID INT PRIMARY KEY,
+    DepartmentName NVARCHAR(100)
+);
+
+-- Insert sample data
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (1, 'HR');
+INSERT INTO Departments (DepartmentID, DepartmentName) VALUES (2, 'IT');
+
+-- Declare a cursor variable
+DECLARE @dept_cursor CURSOR;
+
+-- Set the cursor variable to select departments
+SET @dept_cursor = CURSOR FOR
+SELECT DepartmentID, DepartmentName FROM Departments;
+
+-- Open the cursor
+OPEN @dept_cursor;
+
+-- Declare variables to hold the values
+DECLARE @DepartmentID INT;
+DECLARE @DepartmentName NVARCHAR(100);
+
+-- Fetch data
+FETCH NEXT FROM @dept_cursor INTO @DepartmentID, @DepartmentName;
+
+-- Loop through the cursor
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    PRINT 'Department: ' + @DepartmentName; -- Print department name
+    FETCH NEXT FROM @dept_cursor INTO @DepartmentID, @DepartmentName;
+END
+
+-- Close and deallocate the cursor
+CLOSE @dept_cursor;
+DEALLOCATE @dept_cursor;
